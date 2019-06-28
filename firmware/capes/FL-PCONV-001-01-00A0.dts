@@ -1,0 +1,168 @@
+/*
+ * FL-PCONV-001-001.dts
+ *  
+ */
+/dts-v1/;
+/plugin/;
+
+/ {
+	/* The parent hardware that this overlay is compatible with */
+	compatible = "ti,beaglebone", "ti,beaglebone-black";
+
+	/* Cape board identification */
+	part-number = "FL-PCONV-001-01";
+	version = "00A0";
+	
+	/* state the resources this cape uses */
+	exclusive-use =
+		/* the pin header uses */
+		"P8.19",		/* gpmc_data8 */
+		"P8.13",		/* gpmc_data9 */
+		"P8.14",		/* gpmc_data10 */
+		"P8.17",		/* gpmc_data11 */
+		"P8.12",		/* gpmc_data12 */
+		"P8.11",		/* gpmc_data13 */
+		"P8.16",		/* gpmc_data14 */
+		"P8.15",		/* gpmc_data15 */
+		
+		/* "P8.45", */    /* gpmc_addr0 */
+		/* "P8.46", */	/* gpmc_addr1 */
+		/* "P8.43", */	/* gpmc_addr2 */
+		/* "P8.44", */	/* gpmc_addr3 */
+		/* "P8.41", */	/* gpmc_addr4 */
+		/* "P8.42", */	/* gpmc_addr5 */
+		/* "P8.39", */	/* gpmc_addr6 */
+		/* "P8.40", */	/* gpmc_addr7 */
+		/* "P8.27", */	/* gpmc_addr8 */
+		/* "P8.29", */	/* gpmc_addr9 */
+		/* "P8.28", */	/* gpmc_addr10 */
+		/* "P8.30", */	/* gpmc_addr11 */
+		/* "P8.37", */	/* gpmc_addr12 */
+		/* "P8.38", */	/* gpmc_addr13 */
+		
+		"P9.15",    /* gpmc_csn3 */
+		
+		"P8.8",     /* gpmc_oen_ren */
+		
+		"P8.10",    /* gpmc_wen */
+		
+		"P8.18",    /* gpmc_clk */
+		
+		"P9.11";    /* gpmc_wait0 */
+		
+	/* Set up pin multiplex */
+	fragment@0 {
+		target = <&am33xx_pinmux>;
+		__overlay__ {
+			mbusnet_cape_00a0_pins: pinmux_gpmc_pins {
+				pinctrl-single,pins = <
+					/* 8-bit data bus */
+					0x20 0x30	/* gpmc_ad8 MODE0 | pullup | rx enable */
+					0x24 0x30	/* gpmc_ad9 MODE0 | pullup | rx enable */
+					0x28 0x30	/* gpmc_ad10 MODE0 | pullup | rx enable */
+					0x2c 0x30	/* gpmc_ad11 MODE0 | pullup | rx enable */
+					0x30 0x30	/* gpmc_ad12 MODE0 | pullup | rx enable */
+					0x34 0x30	/* gpmc_ad13 MODE0 | pullup | rx enable */
+					0x38 0x30	/* gpmc_ad14 MODE0 | pullup | rx enable */
+					0x3c 0x30	/* gpmc_ad15 MODE0 | pullup | rx enable */
+					
+					/* 14-bit dddress bus */
+					/* 0xa0 0x11 */   /* lcd_data0 MODE1 | pullup | rx disable */
+					/* 0xa4 0x11 */   /* lcd_data1 MODE1 | pullup | rx disable */
+					/* 0xa8 0x11 */   /* lcd_data2 MODE1 | pullup | rx disable */
+					/* 0xac 0x11 */   /* lcd_data3 MODE1 | pullup | rx disable */
+					/* 0xb0 0x11 */   /* lcd_data4 MODE1 | pullup | rx disable */
+					/* 0xb4 0x11 */   /* lcd_data5 MODE1 | pullup | rx disable */
+					/* 0xb8 0x11 */   /* lcd_data6 MODE1 | pullup | rx disable */
+					/* 0xbc 0x11 */   /* lcd_data7 MODE1 | pullup | rx disable */
+					/* 0xe0 0x11 */   /* lcd_vsync MODE1 | pullup | rx disable */
+					/* 0xe4 0x11 */   /* lcd_hsync MODE1 | pullup | rx disable */
+					/* 0xe8 0x11 */   /* lcd_pclk MODE1  | pullup | rx disable */
+					/* 0xec 0x11 */   /* lcd_ac_bias_en MODE1 | pullup | rx disable */
+					/* 0xc0 0x11 */   /* lcd_data8 MODE1 | pullup | rx disable*/
+					/* 0xc4 0x11 */   /* lcd_data9 MODE1 | pullup | rx disable*/
+					
+					/* Chip select */
+					0x88 0x10	/* gpmc_csn3 MODE0 | pullup | rx disable */
+				
+					/* Output enable */
+					0x94 0x00	/* gpmc_oen_ren MODE0 | pulldown | rx disable */
+				
+					/* Write enable */
+					0x98 0x00	/* gpmc_wen MODE0 | pulldown | rx disable */
+					
+					/* CLK */
+					0x8c 0x30   /* gpmc_clk MODE0 | pullup | rx enable */
+					
+					/* wait0 */
+					0x70 0x3f   /* gpmc_wait0 MODE7 | pull disable | rx enable */
+				>;
+			};
+		};
+	};
+
+	/* Set up the GPMC interface */
+	fragment@1 {
+		target = <&gpmc>;
+		depth = <1>;						/* only create devices on depth 1 */
+
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		__overlay__ {
+			status = "okay";				/* enable the GPMC controller */
+			
+			#address-cells = <2>;
+			#size-cells = <1>;
+
+			pinctrl-names = "default";			/* set up the pin mux for the GPMC signals */
+			pinctrl-0 = <&mbusnet_cape_00a0_pins>;				
+
+			/* chip select ranges */
+			ranges = <3 0 0x1a000000 0x1000000>;	/* define the chip select address range - note that LIMITEDADDRESS in GPMC_CONFIG should be clear for larger (>2k) address ranges */
+
+			/* Define the device - note that the device names matched by the gpmc driver are limited - see gpmc.c */
+			nor {
+				/* Compatibility string for matching the device driver */
+				compatible = "fineline,mbusnet";
+				status = "okay";
+
+				reg = <3 0 0x1000000>;			/* GPMC CS3 */
+				
+				gpmc,no-remap;
+				
+				gpmc,wait-pin = <0>;		
+				gpmc,mux-add-data = <0>;     /* GPMC_CONFIG1_MUXADDDATA */
+				gpmc,clk-activation = <0>;   /* GPMC_CONFIG1_CLKACTIVATIONTIME */
+				bank-width = <2>;			 /* GPMC_CONFIG1_DEVICESIZE(0) */ /* 16 bits data width */
+				gpmc,sync-clk-ps = <30001>;      /* GPMC_CONFIG1_GPMCFCLKDIVIDER */
+				
+				gpmc,cs-on-ns = <30>;           /* 操作开始xx ns后，cs有效 */
+				gpmc,cs-rd-off-ns = <180>;		/* GPMC_CONFIG2_CSRDOFFTIME(6) */ /* 读操作cs保持xx ns */
+				gpmc,cs-wr-off-ns = <180>;		/* GPMC_CONFIG2_CSWROFFTIME(6) */ /* 写操作cs保持xx ns */
+				
+				gpmc,adv-on-ns = <30>;			/* GPMC_CONFIG3_ADVAADMUXONTIME(0) */
+				gpmc,adv-rd-off-ns = <60>;		/* GPMC_CONFIG3_ADVAADMUXWROFFTIME(0) */
+				gpmc,adv-wr-off-ns = <60>;		/* GPMC_CONFIG3_ADVAADMUXRDOFFTIME(0) */
+				gpmc,adv-extra-delay;
+
+				gpmc,we-on-ns = <30>;			/* GPMC_CONFIG4_WEONTIME(4) */ /* 操作开始xx ns后，写使能有效 */
+				gpmc,we-off-ns = <160>;			/* GPMC_CONFIG4_WEOFFTIME(6) */ /* 写使能保持的时间 */
+				gpmc,oe-on-ns = <10>;			/* GPMC_CONFIG4_OEONTIME(2) */ /* 操作开始xx ns后，读使能有效 */
+				gpmc,oe-off-ns = <160>;			/* GPMC_CONFIG4_OEOFFTIME(6) */ /* 读使能保持的时间 */
+
+				gpmc,page-burst-access-ns = <20>;	/* GPMC_CONFIG5_PAGEBURSTACCESSTIME(2) */
+				gpmc,access-ns = <150>;			/* GPMC_CONFIG5_RDACCESSTIME(4) */ /* 读操作时，第一个数据有效前的等待时间 */
+				gpmc,rd-cycle-ns = <200>;		/* GPMC_CONFIG5_RDCYCLETIME(6) */  /* 总共的读操作时长 */
+				gpmc,wr-cycle-ns = <200>;		/* GPMC_CONFIG5_WRCYCLETIME(6) */  /* 总共的写操作时长 */
+
+				gpmc,bus-turnaround-ns = <50>;		/* GPMC_CONFIG6_BUSTURNAROUND(2) */
+				gpmc,cycle2cycle-samecsen;		/* GPMC_CONFIG6_CYCLE2CYCLESAMECSEN */
+				gpmc,cycle2cycle-diffcsen;
+				gpmc,cycle2cycle-delay-ns = <50>;	/* GPMC_CONFIG6_CYCLE2CYCLEDELAY(2) */
+				gpmc,wr-access-ns = <10>;		/* GPMC_CONFIG6_WRACCESSTIME(4) */
+				gpmc,wr-data-mux-bus-ns = <70>;
+			};
+		};
+	};
+};
