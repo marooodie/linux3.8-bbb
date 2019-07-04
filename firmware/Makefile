@@ -203,7 +203,8 @@ fw-shipped-$(CONFIG_CAPE_BEAGLEBONE) += \
 	BB-BONE-KEYS-01-00A0.dtbo \
 	FL-PCONV-001-01-00A0.dtbo \
 	HNC-CAN0-01-00A0.dtbo \
-	BB-RTC-00A0.dtbo
+	BB-RTC-00A0.dtbo \
+	DVK530-LCD10-01-00A0.dtbo
 # the geiger cape
 fw-shipped-$(CONFIG_CAPE_BEAGLEBONE_GEIGER) += \
 	cape-bone-geiger-00A0.dtbo
